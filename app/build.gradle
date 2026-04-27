@@ -2,15 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace = "com.colored.notifications"
+    namespace "com.colored.notifications"
     compileSdk 34
 
     defaultConfig {
+        applicationId "com.colored.notifications"
         minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -29,10 +29,11 @@ android {
         jvmTarget = '1.8'
     }
 
-    // 关键：两个全部手动关闭，杜绝一切绑定报错
-    buildFeatures {
-        dataBinding false
-        viewBinding false
+    // ✅ 添加下面这段，固定 Release APK 输出文件名为 app-release.apk
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "app-release.apk"
+        }
     }
 }
 
@@ -42,7 +43,5 @@ dependencies {
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.palette:palette-ktx:1.0.0'
 
-    // LSP API 101 纯净依赖
     compileOnly "io.github.libxposed:api:101.0.0"
 }
-
