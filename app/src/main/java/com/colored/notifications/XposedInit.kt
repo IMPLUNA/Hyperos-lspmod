@@ -16,7 +16,12 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
-class XposedInit : XposedModule() {
+/**
+ * 带参构造函数版本（与 API 101 新入口对齐）
+ * 如果编译报错 "Too many arguments"，请改回：
+ *   class XposedInit : XposedModule()
+ */
+class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
 
     private val excludedPackages = setOf(
         "com.android.systemui",
@@ -73,7 +78,6 @@ class XposedInit : XposedModule() {
                 val color = extractColorReflect(notification, ctx)
                 if (color == Color.TRANSPARENT) return@hookMethodWithProxy
 
-                // 后续可在此给卡片设置背景色
                 Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
             }
         } catch (e: Exception) {
