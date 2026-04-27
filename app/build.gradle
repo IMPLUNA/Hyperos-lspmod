@@ -1,5 +1,7 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android' version '2.3.0'
+}
 
 android {
     namespace "com.colored.notifications"
@@ -44,5 +46,4 @@ dependencies {
     implementation 'androidx.palette:palette-ktx:1.0.0'
 
     compileOnly "io.github.libxposed:api:101.0.0"
-    implementation "io.github.libxposed:service:101.0.0"
 }
