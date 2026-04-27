@@ -28,15 +28,6 @@ android {
     }
 }
 
-// 使用 androidComponents 替代已废弃的 applicationVariants
-androidComponents {
-    onVariants(selector().all()) { variant ->
-        variant.outputs.forEach { output ->
-            output.outputFileName = "app-release.apk"
-        }
-    }
-}
-
 dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
