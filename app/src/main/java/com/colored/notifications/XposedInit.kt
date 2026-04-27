@@ -10,7 +10,6 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import androidx.palette.graphics.Palette
-import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import java.lang.reflect.InvocationHandler
@@ -18,9 +17,6 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 class XposedInit : XposedModule() {
-
-    // 规范构造函数，提高 LSPosed API 101 兼容性
-    constructor(base: XposedInterface, param: XposedModuleInterface.ModuleLoadedParam) : this()
 
     private val excludedPackages = setOf(
         "com.android.systemui",
@@ -44,10 +40,48 @@ class XposedInit : XposedModule() {
         }
     }
 
-    private fun enableTripleRowStatusBar() {
+    /**
+     * 安全加载类，避免 ClassNotFoundException
+     * 增加类加载器多重尝试，解决不同 Android 版本下的类加载问题
+     */
+    private fun safeLoadClass(className: String): Class<*>? {
+        // 方案1：使用系统默认 ClassLoader
         try {
-            val cls = Class.forName("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
-            val method = cls.getDeclaredMethod("onFinishInflate")
+            return Class.forName(className)
+        } catch (e: ClassNotFoundException) {
+            // 忽略异常，准备尝试下一个 ClassLoader
+        }
+        
+        // 方案2：使用当前线程上下文 ClassLoader
+        try {
+            val contextClassLoader = Thread.currentThread().contextClassLoader
+            return Class.forName(className, false, contextClassLoader)
+        } catch (e: ClassNotFoundException) {
+            // 忽略异常
+        }
+        
+        // 方案3：使用 BootClassLoader
+        try {
+            val bootClassLoader = ClassLoader.getSystemClassLoader()?.parent
+            return Class.forName(className, false, bootClassLoader)
+        } catch (e: ClassNotFoundException) {
+            // 忽略异常
+        }
+        
+        Log.w("HyperOSMod", "Class not found: $className, skipping hook")
+        return null
+    }
+
+    private fun enableTripleRowStatusBar() {
+        // 使用 safeLoadClass 进行加载尝试
+        val statusBarCls = safeLoadClass("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
+        if (statusBarCls == null) {
+            Log.i("HyperOSMod", "Status bar class not available, skipping triple row hook")
+            return
+        }
+        
+        try {
+            val method = statusBarCls.getDeclaredMethod("onFinishInflate")
             hookMethodWithProxy(method) { param: XC_MethodHookParam ->
                 val view = param.thisObject as? View
                 view?.let {
@@ -55,15 +89,22 @@ class XposedInit : XposedModule() {
                 }
                 Log.i("HyperOSMod", "Triple row status bar hooked")
             }
+        } catch (e: NoSuchMethodException) {
+            Log.i("HyperOSMod", "Method 'onFinishInflate' not found, skipping triple row hook")
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Triple row hook failed", e)
         }
     }
 
     private fun setupColoredNotifications() {
+        val notificationCls = safeLoadClass("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
+        if (notificationCls == null) {
+            Log.i("HyperOSMod", "Notification content view class not available, skipping colored notification hook")
+            return
+        }
+        
         try {
-            val cls = Class.forName("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
-            val method = cls.getDeclaredMethod("updateNotification", Notification::class.java)
+            val method = notificationCls.getDeclaredMethod("updateNotification", Notification::class.java)
             hookMethodWithProxy(method) { param: XC_MethodHookParam ->
                 val notification = param.args[0] as? Notification ?: return@hookMethodWithProxy
                 val view = param.thisObject as? View ?: return@hookMethodWithProxy
@@ -77,6 +118,8 @@ class XposedInit : XposedModule() {
 
                 Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
             }
+        } catch (e: NoSuchMethodException) {
+            Log.i("HyperOSMod", "Method 'updateNotification' not found, skipping colored notification hook")
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Colored notification hook failed", e)
         }
