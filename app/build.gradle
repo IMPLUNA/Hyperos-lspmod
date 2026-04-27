@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application' version '9.0.0'
-    id 'org.jetbrains.kotlin.android' version '2.3.0'
+    // 删除下面这一行，AGP 9.0 已内置 Kotlin 支持
+    // id 'org.jetbrains.kotlin.android' version '2.3.0'
 }
 
 android {
