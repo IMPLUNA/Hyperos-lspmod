@@ -1,3 +1,11 @@
-rootProject.name = "Hyperos-lspmod"
+rootProject.name = "HyperosMod"
 include ':app'
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 
