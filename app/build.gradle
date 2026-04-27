@@ -2,8 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace = "com.IMPULSE.app"  // 改成你自己的包名
-
+    namespace = "com.colored.notifications"
     compileSdk 34
 
     defaultConfig {
@@ -11,7 +10,6 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -31,8 +29,26 @@ android {
         jvmTarget = '1.8'
     }
 
-    // 如果用到dataBinding 保留下面这行，没用就删掉
+    // 关闭dataBinding 解决资源冲突报错
     buildFeatures {
-        dataBinding true
+        dataBinding false
     }
+}
+
+dependencies {
+    // 基础AndroidX
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+
+    // 修复 Palette 找不到
+    implementation 'androidx.palette:palette-ktx:1.0.0'
+
+    // 修复 io 包缺失
+    implementation 'commons-io:commons-io:2.15.1'
+
+    // Xposed/LSPosed 核心依赖 修复XposedInterface、log
+    compileOnly 'de.robv.android.xposed:api:82'
+    compileOnly 'de.robv.android.xposed:api:82:sources'
+    compileOnly 'io.github.lsposed:api:1.0'
 }
