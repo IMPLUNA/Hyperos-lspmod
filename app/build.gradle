@@ -2,43 +2,37 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace = "com.IMPULSE.app"  // 改成你自己的包名
+
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.mi.statusmod"
-        minSdk 31
+        minSdk 21
         targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = '1.8'
     }
 
+    // 如果用到dataBinding 保留下面这行，没用就删掉
     buildFeatures {
-        viewBinding true
+        dataBinding true
     }
 }
-
-dependencies {
-    compileOnly 'de.robv.android.xposed:api:101'
-    compileOnly 'de.robv.android.xposed:api-sdk:101'
-
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.palette:palette-ktx:1.0.0'
-}
-
