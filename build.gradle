@@ -1,3 +1,7 @@
+/*
+ * 所有仓库和插件管理已迁移到 settings.gradle 和 app/build.gradle 的 plugins 块，
+ * 此处不再需要 buildscript 和 allprojects 配置。
+ *
 buildscript {
     repositories {
         google()
@@ -17,3 +21,4 @@ allprojects {
         maven { url 'https://jitpack.io' }
     }
 }
+*/
