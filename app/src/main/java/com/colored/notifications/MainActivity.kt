@@ -10,7 +10,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         SettingsManager.init(applicationContext)
 
-        // 手动写死类型，解决 Cannot infer 报错
         val s1: Switch = findViewById(R.id.switch_triple_row)
         val s2: Switch = findViewById(R.id.switch_color_notify)
         val s3: Switch = findViewById(R.id.switch_weather)
@@ -22,7 +21,6 @@ class MainActivity : AppCompatActivity() {
         val s9: Switch = findViewById(R.id.switch_power)
         val s10: Switch = findViewById(R.id.switch_deco_text)
 
-        // 读取配置
         s1.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW)
         s2.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS)
         s3.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_WEATHER)
@@ -34,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         s9.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_POWER)
         s10.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_DECORATION_TEXT)
 
-        // 保存配置
         val sp = getSharedPreferences("hyperos_mod_config", MODE_PRIVATE).edit()
         s1.setOnCheckedChangeListener { _, b -> sp.putBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW, b).apply() }
         s2.setOnCheckedChangeListener { _, b -> sp.putBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS, b).apply() }
