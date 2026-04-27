@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.telephony.SignalStrength;
@@ -104,7 +103,7 @@ public class LegacyHook implements IXposedHookLoadPackage {
 
                     mIsDestroyed = false;
 
-                    // 状态栏高度 40dp（豆包调整后更适配 HyperOS）
+                    // 状态栏高度 40dp（适配 HyperOS）
                     ViewGroup.LayoutParams lp = statusBarView.getLayoutParams();
                     if (lp != null) {
                         lp.height = dip2px(ctx, 40);
@@ -265,15 +264,9 @@ public class LegacyHook implements IXposedHookLoadPackage {
             mSignalText.setText("Sig: N/A");
         }
 
-        // 电池温度
+        // 电池温度（改用读文件，避免 API 兼容问题）
         if (mBatteryTempText != null) {
-            try {
-                BatteryManager bm = (BatteryManager) ctx.getSystemService(Context.BATTERY_SERVICE);
-                if (bm != null) {
-                    int temp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-                    mBatteryTempText.setText(String.format("Bat: %.1f℃", temp / 10.0f));
-                }
-            } catch (Exception ignored) {}
+            mBatteryTempText.setText(readBatteryTemp());
         }
 
         // CPU温度
@@ -450,6 +443,19 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return "CPU: N/A";
     }
 
+    // ==================== 电池温度 ====================
+    private String readBatteryTemp() {
+        // 单位为0.1°C
+        try {
+            String content = readFile("/sys/class/power_supply/battery/temp");
+            if (content != null) {
+                long temp = Long.parseLong(content.trim());
+                return String.format("Bat: %.1f℃", temp / 10.0f);
+            }
+        } catch (Exception ignored) {}
+        return "Bat: N/A";
+    }
+
     // ==================== 充电电流 ====================
     private String readChargingCurrent() {
         String[] paths = {
@@ -536,7 +542,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
             String weather = obj.optString("weather", obj.optJSONObject("weatherinfo") != null ?
                     obj.optJSONObject("weatherinfo").optString("weather", "--") : "--");
             if ("--".equals(temp)) {
-                // 备用解析
                 int tIdx = json.indexOf("\"temp\"");
                 int wIdx = json.indexOf("\"weather\"");
                 if (tIdx > 0) {
@@ -555,4 +560,4 @@ public class LegacyHook implements IXposedHookLoadPackage {
             return "天气: N/A";
         }
     }
-                }
+                                             }
