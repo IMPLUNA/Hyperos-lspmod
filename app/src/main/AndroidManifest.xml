@@ -1,41 +1,49 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+plugins {
+    id 'com.android.application' version '9.0.0'
+}
 
-    <application
-        android:allowBackup="true"
-        android:label="HyperOS Mod"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light">
+android {
+    namespace "com.colored.notifications"
+    compileSdk 36
 
-        <!-- 设置界面入口 -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+    defaultConfig {
+        applicationId "com.colored.notifications"
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+    }
 
-        <!-- LSPosed 模块声明 -->
-        <meta-data
-            android:name="xposedmodule"
-            android:value="true" />
-        <meta-data
-            android:name="xposeddescription"
-            android:value="HyperOS Status Bar and Notification Mod" />
-        <!-- 最低 Xposed API 版本（对应 API 101 模块） -->
-        <meta-data
-            android:name="xposedminversion"
-            android:value="100" />
-        <!-- 新版模块入口类 -->
-        <meta-data
-            android:name="xposedmoduleclass"
-            android:value="com.colored.notifications.XposedInit" />
-        <!-- 推荐作用域（自动建议勾选系统界面） -->
-        <meta-data
-            android:name="xposedscope"
-            android:resource="@array/xposed_scope" />
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
 
-    </application>
-</manifest>
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// 使用 androidComponents 替代已废弃的 applicationVariants
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.outputs.forEach { output ->
+            if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
+                output.outputFileName = "app-release.apk"
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.palette:palette-ktx:1.0.0'
+
+    compileOnly "io.github.libxposed:api:101.0.0"
+}
