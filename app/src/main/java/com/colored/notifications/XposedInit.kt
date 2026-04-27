@@ -13,6 +13,8 @@ import androidx.palette.graphics.Palette
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.libxposed.api.utils.XposedHelpers
+import io.github.libxposed.api.interfaces.MethodHook
+import io.github.libxposed.api.bean.MethodHookParam
 
 class XposedInit : XposedModule() {
 
@@ -41,7 +43,7 @@ class XposedInit : XposedModule() {
     private fun enableTripleRowStatusBar(param: XposedModuleInterface.PackageLoadedParam) {
         try {
             val cls = param.classLoader.loadClass("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
-            XposedHelpers.findAndHookMethod(cls, "onFinishInflate", object : io.github.libxposed.api.interfaces.MethodHook {
+            XposedHelpers.findAndHookMethod(cls, "onFinishInflate", object : MethodHook {
                 override fun afterHooked(param: MethodHookParam) {
                     val view = param.thisObject as? View
                     view?.let {
@@ -58,7 +60,7 @@ class XposedInit : XposedModule() {
     private fun setupColoredNotifications(param: XposedModuleInterface.PackageLoadedParam) {
         try {
             val cls = param.classLoader.loadClass("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
-            XposedHelpers.findAndHookMethod(cls, "updateNotification", Notification::class.java, object : io.github.libxposed.api.interfaces.MethodHook {
+            XposedHelpers.findAndHookMethod(cls, "updateNotification", Notification::class.java, object : MethodHook {
                 override fun afterHooked(param: MethodHookParam) {
                     val notification = param.args[0] as? Notification ?: return
                     val view = param.thisObject as? View ?: return
@@ -78,46 +80,31 @@ class XposedInit : XposedModule() {
         }
     }
 
-    // ---------- 你的反射工具方法保持不变 ----------
     private fun getPackageNameReflect(notification: Notification): String? {
         return try {
             val field = Notification::class.java.getDeclaredField("packageName")
             field.isAccessible = true
             field.get(notification) as? String
         } catch (e: Exception) {
-            Log.e("HyperOSMod", "Failed to get packageName via reflection", e)
             null
         } ?: notification.extras?.getString("android.extra.PACKAGE")
     }
 
     private fun extractColorReflect(notification: Notification, context: Context): Int {
         try {
-            val icon = try {
-                notification.largeIcon
-            } catch (_: Exception) {
-                null
-            } ?: try {
-                notification.smallIcon
-            } catch (_: Exception) {
-                null
-            } ?: return Color.TRANSPARENT
-
+            val icon = notification.largeIcon ?: notification.smallIcon ?: return Color.TRANSPARENT
             val loadMethod = icon.javaClass.getMethod("loadDrawable", Context::class.java)
             val drawable = loadMethod.invoke(icon, context) as? Drawable ?: return Color.TRANSPARENT
-
             val bitmap = if (drawable is BitmapDrawable) drawable.bitmap else drawableToBitmap(drawable)
             return bitmap?.let { getDominantColor(it) } ?: Color.TRANSPARENT
         } catch (e: Exception) {
-            Log.e("HyperOSMod", "Failed to extract color", e)
-            return Color.TRANSPARENT
+            Color.TRANSPARENT
         }
     }
 
     private fun getDominantColor(bitmap: Bitmap): Int {
         val palette = Palette.from(bitmap).generate()
-        return palette.vibrantSwatch?.rgb
-            ?: palette.dominantSwatch?.rgb
-            ?: Color.TRANSPARENT
+        return palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: Color.TRANSPARENT
     }
 
     private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
