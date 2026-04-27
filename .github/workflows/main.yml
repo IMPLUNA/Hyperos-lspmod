@@ -1,44 +1,28 @@
 name: Build APK
-
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
 
-    # 直接下载Gradle 8.2（完全绕过系统预装版本）
-    - name: Download Gradle 8.2
-      run: |
-        wget https://services.gradle.org/distributions/gradle-8.2-bin.zip
-        unzip -q gradle-8.2-bin.zip
-        chmod +x gradle-8.2/bin/gradle
+      - name: Build Release
+        run: |
+          chmod +x gradlew
+          ./gradlew clean assembleRelease --no-configuration-cache
 
-    # 使用下载的Gradle生成wrapper
-    - name: Generate Gradle Wrapper
-      run: ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build with Gradle
-      run: ./gradlew assembleRelease
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-release.apk
-        path: app/build/outputs/apk/release/app-release.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 状态栏模块_Release
+          path: app/build/outputs/apk/release/app-release.apk
 
