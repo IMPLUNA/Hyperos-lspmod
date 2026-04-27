@@ -12,9 +12,11 @@ import android.view.View
 import androidx.palette.graphics.Palette
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import io.github.libxposed.api.utils.XposedHelpers
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
-class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
+class XposedInit : XposedModule() {
 
     private val excludedPackages = setOf(
         "com.android.systemui",
@@ -27,66 +29,114 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
         if (param.packageName != "com.android.systemui") return
 
         try {
-            SettingsManager.init(moduleContext)
-
             if (SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW)) {
-                enableTripleRowStatusBar(param)
+                enableTripleRowStatusBar()
             }
             if (SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS)) {
-                setupColoredNotifications(param)
+                setupColoredNotifications()
             }
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Mod Error", e)
         }
     }
 
-    private fun enableTripleRowStatusBar(param: XposedModuleInterface.PackageLoadedParam) {
+    private fun enableTripleRowStatusBar() {
         try {
-            val cls = param.classLoader.loadClass("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
-            XposedHelpers.findAndHookMethod(cls, "onFinishInflate", object : io.github.libxposed.api.interfaces.MethodHook {
-                override fun afterHooked(param: MethodHookParam) {
-                    Log.i("HyperOSMod", "Triple row status bar hooked")
+            val cls = Class.forName("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
+            val method = cls.getDeclaredMethod("onFinishInflate")
+            hookMethodWithProxy(method) { param ->
+                val view = param.thisObject as? View
+                view?.let {
+                    SettingsManager.init(it.context.applicationContext)
                 }
-            })
+                Log.i("HyperOSMod", "Triple row status bar hooked")
+            }
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Triple row hook failed", e)
         }
     }
 
-    private fun setupColoredNotifications(param: XposedModuleInterface.PackageLoadedParam) {
+    private fun setupColoredNotifications() {
         try {
-            val cls = param.classLoader.loadClass("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
-            XposedHelpers.findAndHookMethod(cls, "updateNotification", Notification::class.java, object : io.github.libxposed.api.interfaces.MethodHook {
-                override fun afterHooked(param: MethodHookParam) {
-                    val notification = param.args[0] as? Notification ?: return
-                    val view = param.thisObject as? View ?: return
-                    val ctx = view.context
-                    val pkg = notification.extras?.getString(Notification.EXTRA_TEMPLATE_PACKAGE) ?: return
-                    if (pkg in excludedPackages) return
+            val cls = Class.forName("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
+            val method = cls.getDeclaredMethod("updateNotification", Notification::class.java)
+            hookMethodWithProxy(method) { param ->
+                val notification = param.args[0] as? Notification ?: return@hookMethodWithProxy
+                val view = param.thisObject as? View ?: return@hookMethodWithProxy
+                val ctx = view.context
 
-                    val color = extractColor(notification, ctx)
-                    if (color == Color.TRANSPARENT) return
-                    Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
-                }
-            })
+                val pkg = notification.packageName ?: return@hookMethodWithProxy
+                if (pkg in excludedPackages) return@hookMethodWithProxy
+
+                val color = extractColor(notification, ctx)
+                if (color == Color.TRANSPARENT) return@hookMethodWithProxy
+
+                // TODO: 在此给通知卡片背景上色 (例: view.setBackgroundColor(color))
+                Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
+            }
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Colored notification hook failed", e)
         }
     }
 
     private fun extractColor(notification: Notification, context: Context): Int {
-        val iconDrawable: Drawable? =
-            notification.largeIcon?.loadDrawable(context) ?: notification.smallIcon?.loadDrawable(context)
-        if (iconDrawable is BitmapDrawable) {
-            return getDominantColor(iconDrawable.bitmap)
+        val icon: Drawable? = try {
+            notification.largeIcon?.loadDrawable(context)
+        } catch (_: Exception) {
+            null
+        } ?: try {
+            notification.smallIcon?.loadDrawable(context)
+        } catch (_: Exception) {
+            null
         }
-        val bmp = drawableToBitmap(iconDrawable) ?: return Color.TRANSPARENT
+        if (icon is BitmapDrawable) {
+            return getDominantColor(icon.bitmap)
+        }
+        val bmp = drawableToBitmap(icon) ?: return Color.TRANSPARENT
         return getDominantColor(bmp)
     }
 
     private fun getDominantColor(bitmap: Bitmap): Int {
         val palette = Palette.from(bitmap).generate()
-        return palette.vibrantSwatch?.rgb ?: palette.dominantSwatch?.rgb ?: Color.TRANSPARENT
+        return palette.vibrantSwatch?.rgb
+            ?: palette.dominantSwatch?.rgb
+            ?: Color.TRANSPARENT
+    }
+
+    /**
+     * 通过动态代理调用运行时的 XposedBridge.hookMethod
+     * 完全避免编译期引入旧 API
+     */
+    private fun hookMethodWithProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
+        try {
+            val xposedBridge = Class.forName("de.robv.android.xposed.XposedBridge")
+            val xcMethodHookClass = Class.forName("de.robv.android.xposed.XC_MethodHook")
+            val hookMethod = xposedBridge.getMethod(
+                "hookMethod",
+                java.lang.reflect.Member::class.java,
+                xcMethodHookClass
+            )
+
+            val proxy = Proxy.newProxyInstance(
+                xcMethodHookClass.classLoader,
+                arrayOf(xcMethodHookClass),
+                InvocationHandler { _, method, args ->
+                    if (method.name == "afterHooked") {
+                        val param = args?.getOrNull(0) ?: return@InvocationHandler null
+                        val paramClass = param.javaClass
+                        val arr = paramClass.getDeclaredField("args").also { it.isAccessible = true }.get(param) as Array<Any?>
+                        val thisObj = paramClass.getDeclaredField("thisObject").also { it.isAccessible = true }.get(param)
+                        val res = paramClass.getDeclaredField("result").also { it.isAccessible = true }.get(param)
+                        afterHook(XC_MethodHookParam(arr, thisObj, res))
+                    }
+                    null
+                }
+            )
+
+            hookMethod.invoke(null, targetMethod, proxy)
+        } catch (e: Exception) {
+            Log.e("HyperOSMod", "Hook proxy failed", e)
+        }
     }
 
     private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
@@ -100,4 +150,10 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
         drawable.draw(canvas)
         return bitmap
     }
+
+    class XC_MethodHookParam(
+        val args: Array<Any?>,
+        val thisObject: Any?,
+        val result: Any?
+    )
 }
