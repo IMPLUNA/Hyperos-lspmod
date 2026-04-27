@@ -15,10 +15,16 @@ jobs:
           java-version: 17
           distribution: temurin
 
-      - name: Build Release
+      # 全局安装 Gradle 8.2 系统级命令，不用 gradlew
+      - name: Install Gradle
         run: |
-          chmod +x gradlew
-          ./gradlew clean assembleRelease --no-configuration-cache
+          sudo apt update
+          sudo apt install gradle -y
+          gradle --version
+
+      # 直接用原生 gradle 编译，避开 gradlew 不存在问题
+      - name: Build Release
+        run: gradle clean assembleRelease --no-configuration-cache
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
