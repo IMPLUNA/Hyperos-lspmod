@@ -1,49 +1,26 @@
-plugins {
-    id 'com.android.application' version '9.0.0'
-}
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-android {
-    namespace "com.colored.notifications"
-    compileSdk 36
+    <application
+        android:allowBackup="true"
+        android:label="HyperOS Mod"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light">
 
-    defaultConfig {
-        applicationId "com.colored.notifications"
-        minSdk 26
-        targetSdk 36
-        versionCode 1
-        versionName "1.0"
-    }
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
-        }
-    }
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="HyperOS Status Bar and Notification Mod" />
+        <meta-data android:name="xposedminversion" android:value="100" />
+        <meta-data android:name="xposedmoduleclass" android:value="com.colored.notifications.XposedInit" />
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-}
-
-// 使用 androidComponents 替代已废弃的 applicationVariants
-androidComponents {
-    onVariants(selector().all()) { variant ->
-        variant.outputs.forEach { output ->
-            if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
-                output.outputFileName = "app-release.apk"
-            }
-        }
-    }
-}
-
-dependencies {
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.palette:palette-ktx:1.0.0'
-
-    compileOnly "io.github.libxposed:api:101.0.0"
-}
+    </application>
+</manifest>
