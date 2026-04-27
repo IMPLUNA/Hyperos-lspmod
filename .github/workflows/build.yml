@@ -13,6 +13,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # 自动生成测试签名密钥（放在 app/ 目录下，密码公开，仅供测试）
+      - name: Generate debug keystore
+        run: |
+          keytool -genkey -v \
+            -keystore app/debug.jks \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Download Gradle 9.1.0 & Generate wrapper
         run: |
           wget https://services.gradle.org/distributions/gradle-9.1.0-bin.zip
