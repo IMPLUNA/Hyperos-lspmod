@@ -13,11 +13,11 @@ jobs:
           java-version: 17
           distribution: temurin
 
-      - name: Download Gradle 8.2 & Generate wrapper
+      - name: Download Gradle 8.7 & Generate wrapper
         run: |
-          wget https://services.gradle.org/distributions/gradle-8.2-bin.zip
-          unzip gradle-8.2-bin.zip
-          ./gradle-8.2/bin/gradle wrapper
+          wget https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip gradle-8.7-bin.zip
+          ./gradle-8.7/bin/gradle wrapper
           chmod +x gradlew
 
       - name: Build Release
@@ -28,4 +28,3 @@ jobs:
         with:
           name: 模块安装包
           path: app/build/outputs/apk/release/app-release.apk
-
