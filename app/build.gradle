@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace = "com.IMPULSE.app"
+    namespace = "com.colored.notifications"
     compileSdk 34
 
     defaultConfig {
-        minSdk 21
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -39,9 +39,8 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.palette:palette-ktx:1.0.0'
-    implementation 'commons-io:commons-io:2.15.1'
 
-    // 官方 LibXposed API 101 完美对应你的 minversion=101
+    // 纯新版 LSP API 101 官方依赖
     compileOnly "io.github.libxposed:api:101.0.0"
 }
 
