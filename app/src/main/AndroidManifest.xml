@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-
     <application
         android:allowBackup="true"
-        android:icon="@android:drawable/sym_def_app_icon"
-        android:label="着色通知卡片"
-        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:label="HyperOS Mod"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Holo.Light.NoActionBar">
+        android:theme="@style/Theme.AppCompat.Light">
 
+        <!-- 主界面 -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -23,15 +17,21 @@
             </intent-filter>
         </activity>
 
+        <!-- LSPosed 模块基础声明 -->
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="三排豪华状态栏 + 通知卡片自动着色 | 适配HyperOS 2.0" />
+            android:value="HyperOS Status Bar &amp; Notification Mod" />
         <meta-data
             android:name="xposedminversion"
-            android:value="101" />
-    </application>
+            android:value="93" />
 
+        <!-- LSPosed 新 API 模块入口类 -->
+        <meta-data
+            android:name="xposedmoduleclass"
+            android:value="com.colored.notifications.XposedInit" />
+
+    </application>
 </manifest>
