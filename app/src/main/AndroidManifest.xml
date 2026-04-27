@@ -7,7 +7,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light">
 
-        <!-- 主界面 -->
+        <!-- 主界面（模块设置入口） -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -17,21 +17,20 @@
             </intent-filter>
         </activity>
 
-        <!-- LSPosed 模块基础声明 -->
+        <!-- ========== LSPosed 模块声明（API 101） ========== -->
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
             android:value="HyperOS Status Bar &amp; Notification Mod" />
+        <!-- 模块要求的最低 Xposed API 版本：101 -->
         <meta-data
             android:name="xposedminversion"
-            android:value="93" />
-
-        <!-- LSPosed 新 API 模块入口类 -->
+            android:value="101" />
+        <!-- API 101 专属模块入口类 -->
         <meta-data
             android:name="xposedmoduleclass"
             android:value="com.colored.notifications.XposedInit" />
-
     </application>
 </manifest>
