@@ -65,13 +65,15 @@ class XposedInit : XposedModule() {
                 val view = param.thisObject as? View ?: return@hookMethodWithProxy
                 val ctx = view.context
 
-                val pkg = notification.packageName ?: return@hookMethodWithProxy
+                // 反射获取包名
+                val pkg = getPackageNameReflect(notification) ?: return@hookMethodWithProxy
                 if (pkg in excludedPackages) return@hookMethodWithProxy
 
-                val color = extractColor(notification, ctx)
+                // 反射获取图标 Drawable 并提取主色
+                val color = extractColorReflect(notification, ctx)
                 if (color == Color.TRANSPARENT) return@hookMethodWithProxy
 
-                // TODO: 在此给通知卡片背景上色 (例: view.setBackgroundColor(color))
+                // 后续可在此给卡片设置背景色
                 Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
             }
         } catch (e: Exception) {
@@ -79,21 +81,40 @@ class XposedInit : XposedModule() {
         }
     }
 
-    private fun extractColor(notification: Notification, context: Context): Int {
-        val icon: Drawable? = try {
-            notification.largeIcon?.loadDrawable(context)
-        } catch (_: Exception) {
+    // ---------- 反射工具 ----------
+    private fun getPackageNameReflect(notification: Notification): String? {
+        return try {
+            val field = Notification::class.java.getDeclaredField("packageName")
+            field.isAccessible = true
+            field.get(notification) as? String
+        } catch (e: Exception) {
+            Log.e("HyperOSMod", "Failed to get packageName via reflection", e)
             null
-        } ?: try {
-            notification.smallIcon?.loadDrawable(context)
-        } catch (_: Exception) {
-            null
+        } ?: notification.extras?.getString("android.extra.PACKAGE")
+    }
+
+    private fun extractColorReflect(notification: Notification, context: Context): Int {
+        try {
+            val icon = try {
+                notification.largeIcon
+            } catch (_: Exception) {
+                null
+            } ?: try {
+                notification.smallIcon
+            } catch (_: Exception) {
+                null
+            } ?: return Color.TRANSPARENT
+
+            // 反射调用 icon.loadDrawable(context)
+            val loadMethod = icon.javaClass.getMethod("loadDrawable", Context::class.java)
+            val drawable = loadMethod.invoke(icon, context) as? Drawable ?: return Color.TRANSPARENT
+
+            val bitmap = if (drawable is BitmapDrawable) drawable.bitmap else drawableToBitmap(drawable)
+            return bitmap?.let { getDominantColor(it) } ?: Color.TRANSPARENT
+        } catch (e: Exception) {
+            Log.e("HyperOSMod", "Failed to extract color", e)
+            return Color.TRANSPARENT
         }
-        if (icon is BitmapDrawable) {
-            return getDominantColor(icon.bitmap)
-        }
-        val bmp = drawableToBitmap(icon) ?: return Color.TRANSPARENT
-        return getDominantColor(bmp)
     }
 
     private fun getDominantColor(bitmap: Bitmap): Int {
@@ -103,10 +124,7 @@ class XposedInit : XposedModule() {
             ?: Color.TRANSPARENT
     }
 
-    /**
-     * 通过动态代理调用运行时的 XposedBridge.hookMethod
-     * 完全避免编译期引入旧 API
-     */
+    // Hook 动态代理（不变）
     private fun hookMethodWithProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
         try {
             val xposedBridge = Class.forName("de.robv.android.xposed.XposedBridge")
