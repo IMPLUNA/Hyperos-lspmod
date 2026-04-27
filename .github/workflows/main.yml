@@ -1,7 +1,5 @@
-name: Build APK
-on:
-  push:
-    branches: [ main ]
+name: Build
+on: push
 
 jobs:
   build:
@@ -15,20 +13,19 @@ jobs:
           java-version: 17
           distribution: temurin
 
-      # 全局安装 Gradle 8.2 系统级命令，不用 gradlew
-      - name: Install Gradle
+      - name: Download Gradle 8.2 & Generate wrapper
         run: |
-          sudo apt update
-          sudo apt install gradle -y
-          gradle --version
+          wget https://services.gradle.org/distributions/gradle-8.2-bin.zip
+          unzip gradle-8.2-bin.zip
+          ./gradle-8.2/bin/gradle wrapper
+          chmod +x gradlew
 
-      # 直接用原生 gradle 编译，避开 gradlew 不存在问题
       - name: Build Release
-        run: gradle clean assembleRelease --no-configuration-cache
+        run: ./gradlew clean assembleRelease
 
-      - name: Upload APK
+      - name: 下载APK
         uses: actions/upload-artifact@v4
         with:
-          name: 状态栏模块_Release
+          name: 模块安装包
           path: app/build/outputs/apk/release/app-release.apk
 
