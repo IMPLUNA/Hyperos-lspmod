@@ -1,27 +1,4 @@
-package com.colored.notifications
-
-import android.app.Notification
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.util.Log
-import android.view.View
-import androidx.palette.graphics.Palette
-import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.XposedModuleInterface
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
-
-/**
- * 带参构造函数版本（与 API 101 新入口对齐）
- * 如果编译报错 "Too many arguments"，请改回：
- *   class XposedInit : XposedModule()
- */
-class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
+class XposedInit : XposedModule() {
 
     private val excludedPackages = setOf(
         "com.android.systemui",
@@ -70,11 +47,9 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
                 val view = param.thisObject as? View ?: return@hookMethodWithProxy
                 val ctx = view.context
 
-                // 反射获取包名
                 val pkg = getPackageNameReflect(notification) ?: return@hookMethodWithProxy
                 if (pkg in excludedPackages) return@hookMethodWithProxy
 
-                // 反射获取图标 Drawable 并提取主色
                 val color = extractColorReflect(notification, ctx)
                 if (color == Color.TRANSPARENT) return@hookMethodWithProxy
 
@@ -99,17 +74,8 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
 
     private fun extractColorReflect(notification: Notification, context: Context): Int {
         try {
-            val icon = try {
-                notification.largeIcon
-            } catch (_: Exception) {
-                null
-            } ?: try {
-                notification.smallIcon
-            } catch (_: Exception) {
-                null
-            } ?: return Color.TRANSPARENT
+            val icon = notification.largeIcon ?: notification.smallIcon ?: return Color.TRANSPARENT
 
-            // 反射调用 icon.loadDrawable(context)
             val loadMethod = icon.javaClass.getMethod("loadDrawable", Context::class.java)
             val drawable = loadMethod.invoke(icon, context) as? Drawable ?: return Color.TRANSPARENT
 
@@ -128,16 +94,12 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
             ?: Color.TRANSPARENT
     }
 
-    // Hook 动态代理（不变）
+    // Hook 动态代理
     private fun hookMethodWithProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
         try {
             val xposedBridge = Class.forName("de.robv.android.xposed.XposedBridge")
             val xcMethodHookClass = Class.forName("de.robv.android.xposed.XC_MethodHook")
-            val hookMethod = xposedBridge.getMethod(
-                "hookMethod",
-                java.lang.reflect.Member::class.java,
-                xcMethodHookClass
-            )
+            val hookMethod = xposedBridge.getMethod("hookMethod", java.lang.reflect.Member::class.java, xcMethodHookClass)
 
             val proxy = Proxy.newProxyInstance(
                 xcMethodHookClass.classLoader,
@@ -163,7 +125,6 @@ class XposedInit(base: XposedModuleInterface) : XposedModule(base) {
 
     private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
         if (drawable == null) return null
-        if (drawable is BitmapDrawable) return drawable.bitmap
         val w = drawable.intrinsicWidth.coerceAtLeast(1)
         val h = drawable.intrinsicHeight.coerceAtLeast(1)
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
