@@ -16,11 +16,27 @@
             </intent-filter>
         </activity>
 
-        <meta-data android:name="xposedModule" android:value="true" />
-        <meta-data android:name="xposedModuleClass" android:value="com.colored.notifications.XposedInit" />
-        <meta-data android:name="xposedMinVersion" android:value="100" />
-        <meta-data android:name="xposedDescription" android:value="HyperOS Status Bar and Notification Mod" />
-        <meta-data android:name="xposedScope" android:resource="@array/xposed_scope" />
+        <!-- 传统模块入口（兼容旧版 LSPosed / Xposed） -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+        <meta-data
+            android:name="xposedinit"
+            android:value="com.colored.notifications.LegacyHook" />
+
+        <!-- 新版 API 101 模块入口 -->
+        <meta-data
+            android:name="xposedmoduleclass"
+            android:value="com.colored.notifications.XposedInit" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="HyperOS Status Bar and Notification Mod" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
 
     </application>
 </manifest>
