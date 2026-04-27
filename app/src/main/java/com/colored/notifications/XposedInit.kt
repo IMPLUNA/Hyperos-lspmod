@@ -7,12 +7,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.Icon
 import android.util.Log
 import android.view.View
 import androidx.palette.graphics.Palette
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
+import java.lang.reflect.Field
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -41,11 +41,12 @@ class XposedInit : XposedModule() {
         }
     }
 
+    // ---------- 三排状态栏 ----------
     private fun enableTripleRowStatusBar() {
         try {
             val cls = Class.forName("com.android.systemui.statusbar.phone.MiuiPhoneStatusBarView")
             val method = cls.getDeclaredMethod("onFinishInflate")
-            hookMethodWithProxy(method) { param ->
+            hookViaProxy(method) { param ->
                 val view = param.thisObject as? View
                 view?.let {
                     SettingsManager.init(it.context.applicationContext)
@@ -57,44 +58,67 @@ class XposedInit : XposedModule() {
         }
     }
 
+    // ---------- 通知自动着色 ----------
     private fun setupColoredNotifications() {
         try {
             val cls = Class.forName("com.android.systemui.statusbar.notification.row.MiuiNotificationContentView")
             val method = cls.getDeclaredMethod("updateNotification", Notification::class.java)
-            hookMethodWithProxy(method) { param ->
-                val notification = param.args[0] as? Notification ?: return@hookMethodWithProxy
-                val view = param.thisObject as? View ?: return@hookMethodWithProxy
+            hookViaProxy(method) { param ->
+                val notification = param.args[0] as? Notification ?: return@hookViaProxy
+                val view = param.thisObject as? View ?: return@hookViaProxy
                 val ctx = view.context
 
-                val pkg = notification.packageName ?: return@hookMethodWithProxy
-                if (pkg in excludedPackages) return@hookMethodWithProxy
+                // 反射获取包名，避免直接访问 notification.packageName
+                val pkg = getNotificationPackage(notification) ?: return@hookViaProxy
+                if (pkg in excludedPackages) return@hookViaProxy
 
-                val color = extractColor(notification, ctx)
-                if (color == Color.TRANSPARENT) return@hookMethodWithProxy
+                // 尝试提取颜色
+                val color = extractColorSafe(notification, ctx)
+                if (color == Color.TRANSPARENT) return@hookViaProxy
 
-                // TODO: 在此给通知卡片背景上色 (例: view.setBackgroundColor(color))
-                Log.i("HyperOSMod", "Notification from $pkg, dominant color: ${Integer.toHexString(color)}")
+                // 后续可在此给卡片设置背景色
+                Log.i("HyperOSMod", "Notification from $pkg, color: ${Integer.toHexString(color)}")
             }
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Colored notification hook failed", e)
         }
     }
 
-    private fun extractColor(notification: Notification, context: Context): Int {
-        val icon: Drawable? = try {
-            notification.largeIcon?.loadDrawable(context)
-        } catch (_: Exception) {
+    // ---------- 安全提取包名 ----------
+    private fun getNotificationPackage(notification: Notification): String? {
+        return try {
+            // 尝试直接访问字段（低 API 可用）
+            val field = Notification::class.java.getDeclaredField("packageName")
+            field.isAccessible = true
+            field.get(notification) as? String
+        } catch (e: Exception) {
             null
         } ?: try {
-            notification.smallIcon?.loadDrawable(context)
-        } catch (_: Exception) {
+            // 备用：从 extras 中获取
+            notification.extras?.getString("android.extra.PACKAGE")
+        } catch (e: Exception) {
             null
         }
-        if (icon is BitmapDrawable) {
-            return getDominantColor(icon.bitmap)
-        }
-        val bmp = drawableToBitmap(icon) ?: return Color.TRANSPARENT
-        return getDominantColor(bmp)
+    }
+
+    // ---------- 安全提取颜色 ----------
+    private fun extractColorSafe(notification: Notification, context: Context): Int {
+        try {
+            // 优先尝试 largeIcon (Icon 类型)
+            val icon = notification.largeIcon ?: notification.smallIcon
+            val drawable: Drawable? = if (icon != null) {
+                // 反射调用 icon.loadDrawable(context) 避免直接调用可能因SDK差异报错
+                val loadMethod = icon.javaClass.getMethod("loadDrawable", Context::class.java)
+                loadMethod.invoke(icon, context) as? Drawable
+            } else null
+
+            if (drawable is BitmapDrawable) {
+                return getDominantColor(drawable.bitmap)
+            }
+            val bmp = drawableToBitmap(drawable)
+            if (bmp != null) return getDominantColor(bmp)
+        } catch (_: Exception) {}
+        return Color.TRANSPARENT
     }
 
     private fun getDominantColor(bitmap: Bitmap): Int {
@@ -104,42 +128,34 @@ class XposedInit : XposedModule() {
             ?: Color.TRANSPARENT
     }
 
-    /**
-     * 通过动态代理调用运行时的 XposedBridge.hookMethod
-     * 完全避免编译期引入旧 API
-     */
-    private fun hookMethodWithProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
+    // ---------- Hook 动态代理 ----------
+    private fun hookViaProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
         try {
             val xposedBridge = Class.forName("de.robv.android.xposed.XposedBridge")
-            val xcMethodHookClass = Class.forName("de.robv.android.xposed.XC_MethodHook")
-            val hookMethod = xposedBridge.getMethod(
-                "hookMethod",
-                java.lang.reflect.Member::class.java,
-                xcMethodHookClass
-            )
+            val xcHookClass = Class.forName("de.robv.android.xposed.XC_MethodHook")
+            val hookMethod = xposedBridge.getMethod("hookMethod",
+                java.lang.reflect.Member::class.java, xcHookClass)
 
-            val proxy = Proxy.newProxyInstance(
-                xcMethodHookClass.classLoader,
-                arrayOf(xcMethodHookClass),
+            val proxy = Proxy.newProxyInstance(xcHookClass.classLoader,
+                arrayOf(xcHookClass),
                 InvocationHandler { _, method, args ->
                     if (method.name == "afterHooked") {
                         val param = args?.getOrNull(0) ?: return@InvocationHandler null
-                        val paramClass = param.javaClass
-                        val arr = paramClass.getDeclaredField("args").also { it.isAccessible = true }.get(param) as Array<Any?>
-                        val thisObj = paramClass.getDeclaredField("thisObject").also { it.isAccessible = true }.get(param)
-                        val res = paramClass.getDeclaredField("result").also { it.isAccessible = true }.get(param)
+                        val pClass = param.javaClass
+                        val arr = pClass.getDeclaredField("args").apply { isAccessible = true }.get(param) as Array<Any?>
+                        val thisObj = pClass.getDeclaredField("thisObject").apply { isAccessible = true }.get(param)
+                        val res = pClass.getDeclaredField("result").apply { isAccessible = true }.get(param)
                         afterHook(XC_MethodHookParam(arr, thisObj, res))
                     }
                     null
-                }
-            )
-
+                })
             hookMethod.invoke(null, targetMethod, proxy)
         } catch (e: Exception) {
             Log.e("HyperOSMod", "Hook proxy failed", e)
         }
     }
 
+    // ---------- 工具方法 ----------
     private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
         if (drawable == null) return null
         if (drawable is BitmapDrawable) return drawable.bitmap
