@@ -16,10 +16,15 @@
             </intent-filter>
         </activity>
 
+        <!-- LSPosed 模块基础声明 -->
         <meta-data android:name="xposedmodule" android:value="true" />
         <meta-data android:name="xposeddescription" android:value="HyperOS Status Bar and Notification Mod" />
-        <meta-data android:name="xposedminversion" android:value="101" />
+        <!-- 【关键修复】：最低API版本声明为100，与你的API 101环境对齐 -->
+        <meta-data android:name="xposedminversion" android:value="100" />
+        <!-- 【关键修复】：新版API 101模块入口声明 -->
         <meta-data android:name="xposedmoduleclass" android:value="com.colored.notifications.XposedInit" />
+        <!-- 推荐作用域：建议用户勾选系统界面 -->
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
 
     </application>
 </manifest>
