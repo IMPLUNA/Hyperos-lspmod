@@ -19,6 +19,11 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # 自动生成Gradle包装器（解决找不到gradlew的问题）
+    - name: Generate Gradle Wrapper
+      run: |
+        gradle wrapper --gradle-version 8.2
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
@@ -30,3 +35,4 @@ jobs:
       with:
         name: app-release.apk
         path: app/build/outputs/apk/release/app-release.apk
+
