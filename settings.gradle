@@ -1,6 +1,3 @@
-rootProject.name = "HyperosMod"
-include ':app'
-
 pluginManagement {
     repositories {
         google()
@@ -8,4 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = "HyperosMod"
+include ':app'
 
