@@ -13,11 +13,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Gradle 9.0.0 & Generate wrapper
+      - name: Download Gradle 9.1.0 & Generate wrapper
         run: |
-          wget https://services.gradle.org/distributions/gradle-9.0.0-bin.zip
-          unzip gradle-9.0.0-bin.zip
-          ./gradle-9.0.0/bin/gradle wrapper
+          wget https://services.gradle.org/distributions/gradle-9.1.0-bin.zip
+          unzip gradle-9.1.0-bin.zip
+          ./gradle-9.1.0/bin/gradle wrapper
           chmod +x gradlew
 
       - name: Build Release
