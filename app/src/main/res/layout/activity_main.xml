@@ -1,231 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <LinearLayout
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HyperOS 状态栏增强模块"
+        android:textSize="20sp"
+        android:layout_marginBottom="20dp"/>
+
+    <Switch
+        android:id="@+id/switch_triple_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:text="启用三排状态栏"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="着色通知 + 三排状态栏"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+    <Switch
+        android:id="@+id/switch_color_notify"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="通知卡片自动着色"/>
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+    <Switch
+        android:id="@+id/switch_weather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示天气"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+    <Switch
+        android:id="@+id/switch_net_speed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示实时网速"/>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="全局设置"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+    <Switch
+        android:id="@+id/switch_signal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示信号强度"/>
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_triple_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="启用三排状态栏"
-                    android:layout_marginBottom="8dp"/>
+    <Switch
+        android:id="@+id/switch_bat_temp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示电池温度"/>
 
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_colored_notifications"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="启用通知卡片着色"/>
+    <Switch
+        android:id="@+id/switch_cpu_temp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示CPU温度"/>
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+    <Switch
+        android:id="@+id/switch_current"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示充电电流"/>
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+    <Switch
+        android:id="@+id/switch_power"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示实时功耗"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+    <Switch
+        android:id="@+id/switch_deco_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="显示装饰文字"/>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示项设置"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_weather"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示天气"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_network_speed"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示网络速度"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_signal_strength"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示信号强度"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_battery_temp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示电池温度"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_cpu_temp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示CPU温度"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_current"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示电流"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_power"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示功耗"
-                    android:layout_marginBottom="8dp"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switch_decoration_text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="显示装饰文字"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="参数调整"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="通知背景透明度"
-                        android:layout_marginBottom="4dp"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.slider.Slider
-                            android:id="@+id/slider_notification_alpha"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:valueFrom="0.05"
-                            android:valueTo="0.5"
-                            android:stepSize="0.01"/>
-
-                        <TextView
-                            android:id="@+id/tv_notification_alpha"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="0.15"
-                            android:gravity="center"/>
-
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="自定义装饰文字"
-                        android:layout_marginBottom="4dp"/>
-
-                    <EditText
-                        android:id="@+id/et_decoration_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="输入装饰文字"/>
-
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/btn_save_decoration"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="保存装饰文字"
-                    android:layout_gravity="end"/>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_restart_system_ui"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="一键重启系统界面"
-            android:backgroundTint="@android:color/holo_blue_dark"
-            android:textColor="@android:color/white"/>
-
-    </LinearLayout>
-
-</ScrollView>
+</LinearLayout>
