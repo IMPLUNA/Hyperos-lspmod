@@ -26,10 +26,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
 
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "app-release.apk"
+// 使用 androidComponents 替代已废弃的 applicationVariants
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName = "app-release.apk"
         }
     }
 }
