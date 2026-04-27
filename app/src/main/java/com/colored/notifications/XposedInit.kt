@@ -10,6 +10,7 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import androidx.palette.graphics.Palette
+import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import java.lang.reflect.InvocationHandler
@@ -17,6 +18,9 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
 class XposedInit : XposedModule() {
+
+    // 规范构造函数，提高 LSPosed API 101 兼容性
+    constructor(base: XposedInterface, param: XposedModuleInterface.ModuleLoadedParam) : this()
 
     private val excludedPackages = setOf(
         "com.android.systemui",
@@ -96,7 +100,7 @@ class XposedInit : XposedModule() {
             val bitmap = if (drawable is BitmapDrawable) drawable.bitmap else drawableToBitmap(drawable)
             return bitmap?.let { getDominantColor(it) } ?: Color.TRANSPARENT
         } catch (e: Exception) {
-            return Color.TRANSPARENT  // 补齐 return
+            return Color.TRANSPARENT
         }
     }
 
