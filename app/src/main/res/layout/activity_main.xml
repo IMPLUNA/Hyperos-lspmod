@@ -18,12 +18,12 @@
             android:text="着色通知 + 三排状态栏"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:marginBottom="16dp"/>
+            android:layout_marginBottom="16dp"/>
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:marginBottom="16dp">
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,14 +37,14 @@
                     android:text="全局设置"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_triple_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="启用三排状态栏"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_colored_notifications"
@@ -58,7 +58,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:marginBottom="16dp">
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -72,56 +72,56 @@
                     android:text="显示项设置"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_weather"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示天气"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_network_speed"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示网络速度"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_signal_strength"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示信号强度"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_battery_temp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示电池温度"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_cpu_temp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示CPU温度"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_current"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示电流"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_power"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="显示功耗"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_decoration_text"
@@ -135,7 +135,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:marginBottom="16dp">
+            android:layout_marginBottom="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -149,19 +149,19 @@
                     android:text="参数调整"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:marginBottom="8dp"/>
+                    android:layout_marginBottom="8dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:marginBottom="16dp">
+                    android:layout_marginBottom="16dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="通知背景透明度"
-                        android:marginBottom="4dp"/>
+                        android:layout_marginBottom="4dp"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -192,13 +192,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:marginBottom="8dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="自定义装饰文字"
-                        android:marginBottom="4dp"/>
+                        android:layout_marginBottom="4dp"/>
 
                     <EditText
                         android:id="@+id/et_decoration_text"
@@ -223,7 +223,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="一键重启系统界面"
-            android:backgroundTint="@color/design_default_color_primary"
+            android:backgroundTint="@android:color/holo_blue_dark"
             android:textColor="@android:color/white"/>
 
     </LinearLayout>
