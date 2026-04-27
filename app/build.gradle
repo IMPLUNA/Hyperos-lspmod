@@ -29,8 +29,10 @@ android {
         jvmTarget = '1.8'
     }
 
+    // 关键：两个全部手动关闭，杜绝一切绑定报错
     buildFeatures {
         dataBinding false
+        viewBinding false
     }
 }
 
@@ -40,7 +42,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.palette:palette-ktx:1.0.0'
 
-    // 纯新版 LSP API 101 官方依赖
+    // LSP API 101 纯净依赖
     compileOnly "io.github.libxposed:api:101.0.0"
 }
 
