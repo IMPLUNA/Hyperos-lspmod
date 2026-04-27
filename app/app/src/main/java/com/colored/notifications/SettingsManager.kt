@@ -1,105 +1,84 @@
-import android.os.Bundle
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.colored.notifications.databinding.ActivityMainBinding
+import android.content.Context
+import android.content.SharedPreferences
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+object SettingsManager {
+    private const val PREFS_NAME = "StatusBarSettings"
+    
+    // 状态栏开关
+    const val KEY_ENABLE_TRIPLE_ROW = "enable_triple_row"
+    const val KEY_ENABLE_COLORED_NOTIFICATIONS = "enable_colored_notifications"
+    
+    // 显示开关
+    const val KEY_SHOW_WEATHER = "show_weather"
+    const val KEY_SHOW_NETWORK_SPEED = "show_network_speed"
+    const val KEY_SHOW_SIGNAL_STRENGTH = "show_signal_strength"
+    const val KEY_SHOW_BATTERY_TEMP = "show_battery_temp"
+    const val KEY_SHOW_CPU_TEMP = "show_cpu_temp"
+    const val KEY_SHOW_CURRENT = "show_current"
+    const val KEY_SHOW_POWER = "show_power"
+    const val KEY_SHOW_DECORATION_TEXT = "show_decoration_text"
+    
+    // 可调整参数
+    const val KEY_DECORATION_TEXT = "decoration_text"
+    const val KEY_NOTIFICATION_ALPHA = "notification_alpha"
+    const val KEY_WEATHER_UPDATE_INTERVAL = "weather_update_interval"
+    const val KEY_TEMP_UPDATE_INTERVAL = "temp_update_interval"
+    const val KEY_NETWORK_UPDATE_INTERVAL = "network_update_interval"
+    
+    // 默认值
+    private val defaults = mapOf(
+        KEY_ENABLE_TRIPLE_ROW to true,
+        KEY_ENABLE_COLORED_NOTIFICATIONS to true,
+        KEY_SHOW_WEATHER to true,
+        KEY_SHOW_NETWORK_SPEED to true,
+        KEY_SHOW_SIGNAL_STRENGTH to true,
+        KEY_SHOW_BATTERY_TEMP to true,
+        KEY_SHOW_CPU_TEMP to true,
+        KEY_SHOW_CURRENT to true,
+        KEY_SHOW_POWER to true,
+        KEY_SHOW_DECORATION_TEXT to true,
+        KEY_DECORATION_TEXT to "☆眺望朦胧黎明 遥闻槐序馨香 照明万象更迭☆",
+        KEY_NOTIFICATION_ALPHA to 0.15f,
+        KEY_WEATHER_UPDATE_INTERVAL to 30,
+        KEY_TEMP_UPDATE_INTERVAL to 5,
+        KEY_NETWORK_UPDATE_INTERVAL to 1
+    )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        
-        SettingsManager.init(this)
-        loadSettings()
-        setupListeners()
+    private lateinit var prefs: SharedPreferences
+
+    fun init(context: Context) {
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    private fun loadSettings() {
-        binding.switchTripleRow.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW)
-        binding.switchColoredNotifications.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS)
-        
-        binding.switchWeather.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_WEATHER)
-        binding.switchNetworkSpeed.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_NETWORK_SPEED)
-        binding.switchSignalStrength.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_SIGNAL_STRENGTH)
-        binding.switchBatteryTemp.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_BATTERY_TEMP)
-        binding.switchCpuTemp.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_CPU_TEMP)
-        binding.switchCurrent.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_CURRENT)
-        binding.switchPower.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_POWER)
-        binding.switchDecorationText.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_SHOW_DECORATION_TEXT)
-        
-        binding.etDecorationText.setText(SettingsManager.getString(SettingsManager.KEY_DECORATION_TEXT))
-        binding.sliderNotificationAlpha.value = SettingsManager.getFloat(SettingsManager.KEY_NOTIFICATION_ALPHA)
-        binding.tvNotificationAlpha.text = String.format("%.2f", SettingsManager.getFloat(SettingsManager.KEY_NOTIFICATION_ALPHA))
+    fun getBoolean(key: String): Boolean {
+        return prefs.getBoolean(key, defaults[key] as Boolean)
     }
 
-    private fun setupListeners() {
-        binding.switchTripleRow.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW, isChecked)
-            showRestartToast()
-        }
-
-        binding.switchColoredNotifications.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS, isChecked)
-            showRestartToast()
-        }
-
-        binding.switchWeather.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_WEATHER, isChecked)
-        }
-
-        binding.switchNetworkSpeed.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_NETWORK_SPEED, isChecked)
-        }
-
-        binding.switchSignalStrength.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_SIGNAL_STRENGTH, isChecked)
-        }
-
-        binding.switchBatteryTemp.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_BATTERY_TEMP, isChecked)
-        }
-
-        binding.switchCpuTemp.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_CPU_TEMP, isChecked)
-        }
-
-        binding.switchCurrent.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_CURRENT, isChecked)
-        }
-
-        binding.switchPower.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_POWER, isChecked)
-        }
-
-        binding.switchDecorationText.setOnCheckedChangeListener { _, isChecked ->
-            SettingsManager.putBoolean(SettingsManager.KEY_SHOW_DECORATION_TEXT, isChecked)
-        }
-
-        binding.btnSaveDecoration.setOnClickListener {
-            SettingsManager.putString(SettingsManager.KEY_DECORATION_TEXT, binding.etDecorationText.text.toString())
-            Toast.makeText(this, "装饰文字已保存", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.sliderNotificationAlpha.addOnChangeListener { _, value, _ ->
-            binding.tvNotificationAlpha.text = String.format("%.2f", value)
-            SettingsManager.putFloat(SettingsManager.KEY_NOTIFICATION_ALPHA, value)
-            showRestartToast()
-        }
-
-        binding.btnRestartSystemUI.setOnClickListener {
-            try {
-                Runtime.getRuntime().exec("su -c killall com.android.systemui")
-                Toast.makeText(this, "系统界面正在重启", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(this, "需要Root权限才能一键重启", Toast.LENGTH_SHORT).show()
-            }
-        }
+    fun getString(key: String): String {
+        return prefs.getString(key, defaults[key] as String) ?: ""
     }
 
-    private fun showRestartToast() {
-        Toast.makeText(this, "更改将在重启系统界面后生效", Toast.LENGTH_SHORT).show()
+    fun getFloat(key: String): Float {
+        return prefs.getFloat(key, defaults[key] as Float)
+    }
+
+    fun getInt(key: String): Int {
+        return prefs.getInt(key, defaults[key] as Int)
+    }
+
+    fun putBoolean(key: String, value: Boolean) {
+        prefs.edit().putBoolean(key, value).apply()
+    }
+
+    fun putString(key: String, value: String) {
+        prefs.edit().putString(key, value).apply()
+    }
+
+    fun putFloat(key: String, value: Float) {
+        prefs.edit().putFloat(key, value).apply()
+    }
+
+    fun putInt(key: String, value: Int) {
+        prefs.edit().putInt(key, value).apply()
     }
 }
-
