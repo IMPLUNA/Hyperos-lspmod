@@ -16,7 +16,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 传统模块入口（兼容旧版 LSPosed / Xposed） -->
+        <!-- 传统 Xposed 入口（兼容旧版框架） -->
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
