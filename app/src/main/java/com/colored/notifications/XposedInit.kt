@@ -14,17 +14,19 @@ import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.widget.TextView
 import androidx.palette.graphics.Palette
-import io.github.libxposed.api.XposedInterface
+
+// 新版 LibXposed API 101 官方正确导入
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
-import io.github.libxposed.api.annotations.AfterInvocation
-import io.github.libxposed.api.annotations.XposedEntryPoint
+import io.github.libxposed.api.bean.MethodHookParam
+import io.github.libxposed.api.utils.XposedHelpers
+
 import java.io.BufferedReader
 import java.io.FileReader
 import java.text.SimpleDateFormat
 import java.util.*
 
-@XposedEntryPoint
+// 移除废弃 @XposedEntryPoint
 class XposedInit : XposedModule {
     // 排除这些系统应用的通知着色
     private val excludedPackages = setOf(
@@ -40,6 +42,7 @@ class XposedInit : XposedModule {
     // 全局Handler用于UI更新
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // 新版101 标准入口方法
     override fun onPackageLoaded(param: XposedModuleInterface.PackageLoadedParam) {
         // 只Hook系统界面
         if (param.packageName != "com.android.systemui") return
@@ -723,28 +726,22 @@ class XposedInit : XposedModule {
         return (this * context.resources.displayMetrics.density).toInt()
     }
 
-    /**
-     * Hook方法的工具函数
-     */
+    // 新版 LibXposed 101 标准钩子工具方法
     private fun hookMethod(
         clazz: Class<*>,
         methodName: String,
         vararg parameterTypes: Class<*>,
-        callback: (XposedInterface.AfterHookCallback) -> Unit
+        afterBlock: (MethodHookParam) -> Unit
     ) {
-        XposedInterface.hookMethod(
-            clazz.getDeclaredMethod(methodName, *parameterTypes),
-            object : XposedInterface.MethodHook {
-                @AfterInvocation
-                override fun after(param: XposedInterface.AfterHookCallback) {
-                    try {
-                        callback(param)
-                    } catch (e: Exception) {
-                        log("Hook错误: ${e.message}")
-                        e.printStackTrace()
-                    }
+        XposedHelpers.findAndHookMethod(clazz, methodName, *parameterTypes, object : io.github.libxposed.api.bean.MethodHook {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                try {
+                    afterBlock(param)
+                } catch (e: Exception) {
+                    log("Hook异常: ${e.message}")
                 }
             }
-        )
+        })
     }
 }
+
