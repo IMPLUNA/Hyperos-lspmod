@@ -1,3 +1,21 @@
+package com.colored.notifications
+
+import android.app.Notification
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.util.Log
+import android.view.View
+import androidx.palette.graphics.Palette
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+
 class XposedInit : XposedModule() {
 
     private val excludedPackages = setOf(
@@ -60,7 +78,6 @@ class XposedInit : XposedModule() {
         }
     }
 
-    // ---------- 反射工具 ----------
     private fun getPackageNameReflect(notification: Notification): String? {
         return try {
             val field = Notification::class.java.getDeclaredField("packageName")
@@ -74,7 +91,15 @@ class XposedInit : XposedModule() {
 
     private fun extractColorReflect(notification: Notification, context: Context): Int {
         try {
-            val icon = notification.largeIcon ?: notification.smallIcon ?: return Color.TRANSPARENT
+            val icon = try {
+                notification.largeIcon
+            } catch (_: Exception) {
+                null
+            } ?: try {
+                notification.smallIcon
+            } catch (_: Exception) {
+                null
+            } ?: return Color.TRANSPARENT
 
             val loadMethod = icon.javaClass.getMethod("loadDrawable", Context::class.java)
             val drawable = loadMethod.invoke(icon, context) as? Drawable ?: return Color.TRANSPARENT
@@ -94,12 +119,15 @@ class XposedInit : XposedModule() {
             ?: Color.TRANSPARENT
     }
 
-    // Hook 动态代理
     private fun hookMethodWithProxy(targetMethod: Method, afterHook: (XC_MethodHookParam) -> Unit) {
         try {
             val xposedBridge = Class.forName("de.robv.android.xposed.XposedBridge")
             val xcMethodHookClass = Class.forName("de.robv.android.xposed.XC_MethodHook")
-            val hookMethod = xposedBridge.getMethod("hookMethod", java.lang.reflect.Member::class.java, xcMethodHookClass)
+            val hookMethod = xposedBridge.getMethod(
+                "hookMethod",
+                java.lang.reflect.Member::class.java,
+                xcMethodHookClass
+            )
 
             val proxy = Proxy.newProxyInstance(
                 xcMethodHookClass.classLoader,
@@ -125,6 +153,7 @@ class XposedInit : XposedModule() {
 
     private fun drawableToBitmap(drawable: Drawable?): Bitmap? {
         if (drawable == null) return null
+        if (drawable is BitmapDrawable) return drawable.bitmap
         val w = drawable.intrinsicWidth.coerceAtLeast(1)
         val h = drawable.intrinsicHeight.coerceAtLeast(1)
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
