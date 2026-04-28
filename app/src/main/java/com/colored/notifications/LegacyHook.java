@@ -1,4 +1,4 @@
-                                             package com.colored.notifications;
+package com.colored.notifications;
 
 import android.app.Application;
 import android.app.Notification;
@@ -11,7 +11,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -598,13 +597,23 @@ public class LegacyHook implements IXposedHookLoadPackage {
         } catch (Exception ignored) {}
     }
 
+    // 完全通过反射获取 Application Context，避免编译错误
     private Context getModuleContext() {
         try {
-            return android.app.ActivityThread.currentApplication()
-                    .createPackageContext("com.colored.notifications",
-                            Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+            Method currentApplicationMethod = activityThreadClass.getMethod("currentApplication");
+            Application app = (Application) currentApplicationMethod.invoke(null);
+            return app.createPackageContext("com.colored.notifications",
+                    Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
         } catch (Exception e) {
-            return null;
+            try {
+                Class<?> appGlobalsClass = Class.forName("android.app.AppGlobals");
+                Method getInitialApplication = appGlobalsClass.getMethod("getInitialApplication");
+                Application app = (Application) getInitialApplication.invoke(null);
+                return app.createPackageContext("com.colored.notifications",
+                        Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
+            } catch (Exception ignored) {}
         }
+        return null;
     }
-} 
+              }
