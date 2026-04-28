@@ -1,7 +1,9 @@
 package com.colored.notifications
 
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Switch
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -20,6 +22,8 @@ class MainActivity : AppCompatActivity() {
         val s8: Switch = findViewById(R.id.switch_current)
         val s9: Switch = findViewById(R.id.switch_power)
         val s10: Switch = findViewById(R.id.switch_deco_text)
+        val btnRefresh: Button = findViewById(R.id.btn_refresh_log)
+        val tvLog: TextView = findViewById(R.id.tv_log)
 
         s1.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW)
         s2.isChecked = SettingsManager.getBoolean(SettingsManager.KEY_ENABLE_COLORED_NOTIFICATIONS)
@@ -43,5 +47,16 @@ class MainActivity : AppCompatActivity() {
         s8.setOnCheckedChangeListener { _, b -> sp.putBoolean(SettingsManager.KEY_SHOW_CURRENT, b).apply() }
         s9.setOnCheckedChangeListener { _, b -> sp.putBoolean(SettingsManager.KEY_SHOW_POWER, b).apply() }
         s10.setOnCheckedChangeListener { _, b -> sp.putBoolean(SettingsManager.KEY_SHOW_DECORATION_TEXT, b).apply() }
+
+        btnRefresh.setOnClickListener {
+            loadLog(tvLog)
+        }
+        loadLog(tvLog)
+    }
+
+    private fun loadLog(tvLog: TextView) {
+        val sp = getSharedPreferences("log_sp", MODE_PRIVATE)
+        val logs = sp.getString("logs", "")
+        tvLog.text = if (logs.isNullOrEmpty()) "暂无日志" else logs
     }
 }
