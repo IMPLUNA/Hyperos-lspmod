@@ -1,7 +1,9 @@
-package com.colored.notifications;
+                                             package com.colored.notifications;
 
+import android.app.Application;
 import android.app.Notification;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,8 +11,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.telephony.SignalStrength;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -25,12 +25,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -49,7 +51,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
             "com.android.phone"
     ));
 
-    // 状态栏信息行相关视图
     private LinearLayout mInfoBar;
     private TextView mWeatherText;
     private TextView mNetSpeedText, mSignalText, mBatteryTempText, mCpuTempText, mCurrentText, mPowerText, mDecoText;
@@ -59,7 +60,7 @@ public class LegacyHook implements IXposedHookLoadPackage {
     private long mLastUpdateTime = 0;
     private boolean mIsDestroyed = false;
 
-    // 天气相关
+    // 天气
     private String mWeatherCity = "北京";
     private String mWeatherCityId = "101010100";
     private long mLastWeatherUpdate = 0;
@@ -68,6 +69,30 @@ public class LegacyHook implements IXposedHookLoadPackage {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (!lpparam.packageName.equals("com.android.systemui")) return;
 
+        // 尽早获取 Context 并初始化 SettingsManager
+        try {
+            XposedHelpers.findAndHookMethod(
+                "com.android.systemui.SystemUIApplication",
+                lpparam.classLoader,
+                "onCreate",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        Application app = (Application) param.thisObject;
+                        Context context = app.getApplicationContext();
+                        SettingsManager.INSTANCE.init(context);
+                        logToUi("SettingsManager initialized");
+
+                        // 根据设置注册其他 Hook
+                        startModule(lpparam);
+                    }
+                });
+        } catch (Exception e) {
+            logToUi("Failed to hook SystemUIApplication: " + e.getMessage());
+        }
+    }
+
+    private void startModule(XC_LoadPackage.LoadPackageParam lpparam) {
         boolean needTripleRow = SettingsManager.INSTANCE.getBoolean(SettingsManager.KEY_ENABLE_TRIPLE_ROW);
         boolean needInfoBar = SettingsManager.INSTANCE.getBoolean(SettingsManager.KEY_SHOW_NETWORK_SPEED)
                 || SettingsManager.INSTANCE.getBoolean(SettingsManager.KEY_SHOW_SIGNAL_STRENGTH)
@@ -99,11 +124,10 @@ public class LegacyHook implements IXposedHookLoadPackage {
                 protected void afterHookedMethod(MethodHookParam param) {
                     View statusBarView = (View) param.thisObject;
                     Context ctx = statusBarView.getContext();
-                    SettingsManager.INSTANCE.init(ctx.getApplicationContext());
 
                     mIsDestroyed = false;
 
-                    // 状态栏高度 40dp（适配 HyperOS）
+                    // 状态栏高度 40dp
                     ViewGroup.LayoutParams lp = statusBarView.getLayoutParams();
                     if (lp != null) {
                         lp.height = dip2px(ctx, 40);
@@ -126,11 +150,12 @@ public class LegacyHook implements IXposedHookLoadPackage {
 
                     addInfoTextViews(ctx);
                     startRefreshing();
-                    hookViewDestroy(statusBarView); // 生命周期管理
+                    hookViewDestroy(statusBarView);
+                    logToUi("Triple row status bar initialized");
                 }
             });
         } catch (Throwable e) {
-            XposedBridge.log(TAG + " TripleRow err: " + e.getMessage());
+            logToUi("TripleRow err: " + e.getMessage());
         }
     }
 
@@ -258,13 +283,12 @@ public class LegacyHook implements IXposedHookLoadPackage {
             mLastUpdateTime = now;
         }
 
-        // 信号强度（示例占位）
+        // 信号强度
         if (mSignalText != null) {
-            // 需要系统权限，暂时显示 N/A
             mSignalText.setText("Sig: N/A");
         }
 
-        // 电池温度（改用读文件，避免 API 兼容问题）
+        // 电池温度
         if (mBatteryTempText != null) {
             mBatteryTempText.setText(readBatteryTemp());
         }
@@ -290,7 +314,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         }
     }
 
-    // ==================== 生命周期：视图销毁时停止刷新 ====================
     private void hookViewDestroy(View statusBarView) {
         try {
             ViewGroup vg = (ViewGroup) statusBarView;
@@ -313,11 +336,10 @@ public class LegacyHook implements IXposedHookLoadPackage {
                 }
             });
         } catch (Exception e) {
-            XposedBridge.log(TAG + " hookViewDestroy failed: " + e.getMessage());
+            logToUi("hookViewDestroy failed: " + e.getMessage());
         }
     }
 
-    // ==================== 通知着色 ====================
     private void setupColoredNotifications(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
             Class<?> cls = XposedHelpers.findClass(
@@ -339,15 +361,14 @@ public class LegacyHook implements IXposedHookLoadPackage {
                     if (color == Color.TRANSPARENT) return;
 
                     view.setBackgroundColor(color);
-                    XposedBridge.log(TAG + " Colored notification from " + pkg);
+                    logToUi("Colored notification from " + pkg);
                 }
             });
         } catch (Exception e) {
-            XposedBridge.log(TAG + " Colored notification hook failed: " + e.getMessage());
+            logToUi("Colored notification hook failed: " + e.getMessage());
         }
     }
 
-    // ==================== 工具方法 ====================
     private String getPackageName(Notification n) {
         try {
             Field field = Notification.class.getDeclaredField("packageName");
@@ -404,7 +425,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return (int) (dpValue * scale + 0.5f);
     }
 
-    // ==================== 网络流量 ====================
     private long[] getNetworkTraffic() {
         long rx = 0, tx = 0;
         try {
@@ -424,7 +444,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return new long[]{rx, tx};
     }
 
-    // ==================== CPU温度 ====================
     private String readCpuTemp() {
         String[] paths = {
                 "/sys/class/thermal/thermal_zone0/temp",
@@ -443,9 +462,7 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return "CPU: N/A";
     }
 
-    // ==================== 电池温度 ====================
     private String readBatteryTemp() {
-        // 单位为0.1°C
         try {
             String content = readFile("/sys/class/power_supply/battery/temp");
             if (content != null) {
@@ -456,7 +473,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return "Bat: N/A";
     }
 
-    // ==================== 充电电流 ====================
     private String readChargingCurrent() {
         String[] paths = {
                 "/sys/class/power_supply/battery/current_now",
@@ -474,7 +490,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         return "Cur: N/A";
     }
 
-    // ==================== 实时功耗 ====================
     private String calculatePower() {
         try {
             String v = readFile("/sys/class/power_supply/battery/voltage_now");
@@ -500,7 +515,6 @@ public class LegacyHook implements IXposedHookLoadPackage {
         }
     }
 
-    // ==================== 天气（小米天气接口） ====================
     private void fetchWeather() {
         new Thread(() -> {
             try {
@@ -528,8 +542,9 @@ public class LegacyHook implements IXposedHookLoadPackage {
                 if (mWeatherText != null && mHandler != null) {
                     mHandler.post(() -> mWeatherText.setText(info));
                 }
+                logToUi("Weather updated");
             } catch (Exception e) {
-                XposedBridge.log(TAG + " Weather fetch failed: " + e.getMessage());
+                logToUi("Weather fetch failed: " + e.getMessage());
             }
         }).start();
     }
@@ -560,4 +575,36 @@ public class LegacyHook implements IXposedHookLoadPackage {
             return "天气: N/A";
         }
     }
-                                             }
+
+    // ==================== SharedPreferences 日志输出 ====================
+    private void logToUi(String msg) {
+        XposedBridge.log(TAG + " " + msg);
+        try {
+            Context ctx = getModuleContext();
+            if (ctx != null) {
+                SharedPreferences sp = ctx.getSharedPreferences("log_sp", Context.MODE_PRIVATE);
+                String history = sp.getString("logs", "");
+                String[] lines = history.split("\n");
+                StringBuilder sb = new StringBuilder();
+                int maxLines = 200;
+                int start = lines.length > maxLines ? lines.length - maxLines : 0;
+                for (int i = start; i < lines.length; i++) {
+                    sb.append(lines[i]).append("\n");
+                }
+                sb.append(new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()))
+                  .append(" ").append(msg).append("\n");
+                sp.edit().putString("logs", sb.toString()).apply();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private Context getModuleContext() {
+        try {
+            return android.app.ActivityThread.currentApplication()
+                    .createPackageContext("com.colored.notifications",
+                            Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+} 
