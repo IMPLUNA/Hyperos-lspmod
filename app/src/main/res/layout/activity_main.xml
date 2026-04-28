@@ -72,4 +72,41 @@
         android:layout_height="wrap_content"
         android:text="显示装饰文字"/>
 
+    <!-- 日志区域标题和刷新按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="运行日志"
+            android:textSize="16sp" />
+        <Button
+            android:id="@+id/btn_refresh_log"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="刷新" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:background="#F0F0F0">
+        <TextView
+            android:id="@+id/tv_log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="12sp"
+            android:textColor="#000000"
+            android:typeface="monospace"
+            android:gravity="start"
+            android:text="日志加载中..." />
+    </ScrollView>
+
 </LinearLayout>
